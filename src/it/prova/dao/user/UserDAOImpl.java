@@ -4,8 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import it.prova.dao.AbstractMySQLDAO;
@@ -219,9 +219,9 @@ public class UserDAOImpl extends AbstractMySQLDAO implements UserDAO {
 			throw new Exception("Valore di input non ammesso.");
 		ArrayList<User> result = new ArrayList<User>();
 
-		try (PreparedStatement ps = connection.prepareStatement("select * from user u where u.cognome like ? ;")) {
+		try (PreparedStatement ps = connection.prepareStatement("select * from user u where u.nome like ?;")) {
 			// quando si fa il setDate serve un tipo java.sql.Date
-			ps.setDate(1, java.sql.Date.valueOf(iniziale));
+			ps.setString(1, iniziale + "%");
 
 			try (ResultSet rs = ps.executeQuery();) {
 				while (rs.next()) {
@@ -245,28 +245,113 @@ public class UserDAOImpl extends AbstractMySQLDAO implements UserDAO {
 	}
 
 	@Override
-	public List<User> cercaTuttiQuelliCreatiPrimaDi(Date dataConfronto) throws Exception {
+	public List<User> cercaTuttiQuelliCreatiPrimaDi(LocalDate dataConfronto) throws Exception {
 		// prima di tutto cerchiamo di capire se possiamo effettuare le operazioni
-				if (isNotActive())
-					throw new Exception("Connessione non attiva. Impossibile effettuare operazioni DAO.");
+		if (isNotActive())
+			throw new Exception("Connessione non attiva. Impossibile effettuare operazioni DAO.");
 
-				if (dataConfronto == null)
-					throw new Exception("Valore di input non ammesso.");
-				
-				
-		return null;
+		if (dataConfronto == null)
+			throw new Exception("Valore di input non ammesso.");
+
+		ArrayList<User> result = new ArrayList<User>();
+
+		try (PreparedStatement ps = connection.prepareStatement("select * from user where dateCreated > ? ;")) {
+			// quando si fa il setDate serve un tipo java.sql.Date
+			ps.setDate(1, java.sql.Date.valueOf(dataConfronto));
+
+			try (ResultSet rs = ps.executeQuery();) {
+				while (rs.next()) {
+					User userTemp = new User();
+					userTemp.setNome(rs.getString("NOME"));
+					userTemp.setCognome(rs.getString("COGNOME"));
+					userTemp.setLogin(rs.getString("LOGIN"));
+					userTemp.setPassword(rs.getString("PASSWORD"));
+					userTemp.setDateCreated(
+							rs.getDate("DATECREATED") != null ? rs.getDate("DATECREATED").toLocalDate() : null);
+					userTemp.setId(rs.getLong("ID"));
+					result.add(userTemp);
+				}
+			} // niente catch qui
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw e;
+		}
+		return result;
 	}
 
 	@Override
 	public List<User> cercaPerCognomeENomeCheInziaCon(String cognomeInput, String inzialeNomeInput) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+		// prima di tutto cerchiamo di capire se possiamo effettuare le operazioni
+		if (isNotActive())
+			throw new Exception("Connessione non attiva. Impossibile effettuare operazioni DAO.");
+
+		if (cognomeInput == null || cognomeInput == null)
+			throw new Exception("Valore di input non ammesso.");
+
+		ArrayList<User> result = new ArrayList<User>();
+
+		try (PreparedStatement ps = connection.prepareStatement("select * from user u where u.nome like ? and u.cognome like ? ;")) {
+			// quando si fa il setDate serve un tipo java.sql.Date
+			ps.setString(1, inzialeNomeInput + "%");
+			ps.setString(2, cognomeInput);
+
+			try (ResultSet rs = ps.executeQuery();) {
+				while (rs.next()) {
+					User userTemp = new User();
+					userTemp.setNome(rs.getString("NOME"));
+					userTemp.setCognome(rs.getString("COGNOME"));
+					userTemp.setLogin(rs.getString("LOGIN"));
+					userTemp.setPassword(rs.getString("PASSWORD"));
+					userTemp.setDateCreated(
+							rs.getDate("DATECREATED") != null ? rs.getDate("DATECREATED").toLocalDate() : null);
+					userTemp.setId(rs.getLong("ID"));
+					result.add(userTemp);
+				}
+			} // niente catch qui
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw e;
+		}
+		return result;
+
 	}
 
 	@Override
 	public User accedi(String loginInput, String passwordInput) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+		// prima di tutto cerchiamo di capire se possiamo effettuare le operazioni
+				if (isNotActive())
+					throw new Exception("Connessione non attiva. Impossibile effettuare operazioni DAO.");
+
+				if (loginInput == null || loginInput.length() < 1 || passwordInput == null || passwordInput.length() < 1) 
+					throw new Exception("Valore di input non ammesso.");
+
+				User result = null;
+				try (PreparedStatement ps = connection.prepareStatement("select * from user where login like ? and password like ?")) {
+
+					ps.setString(1, loginInput);
+					ps.setString(2, passwordInput);
+					try (ResultSet rs = ps.executeQuery()) {
+						if (rs.next()) {
+							result = new User();
+							result.setNome(rs.getString("NOME"));
+							result.setCognome(rs.getString("COGNOME"));
+							result.setLogin(rs.getString("LOGIN"));
+							result.setPassword(rs.getString("PASSWORD"));
+							result.setDateCreated(
+									rs.getDate("DATECREATED") != null ? rs.getDate("DATECREATED").toLocalDate() : null);
+							result.setId(rs.getLong("ID"));
+						} else {
+							result = null;
+						}
+					} // niente catch qui
+
+				} catch (Exception e) {
+					e.printStackTrace();
+					throw e;
+				}
+				return result;
 	}
 
 }

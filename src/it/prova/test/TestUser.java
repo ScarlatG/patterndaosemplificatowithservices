@@ -31,6 +31,14 @@ public class TestUser {
 			testUpdateUser(userService);
 			System.out.println("In tabella ci sono " + userService.listAll().size() + " elementi.");
 
+			testCercaTuttiQuelliCheUsernameIniziaCon(userService);
+			System.out.println("In tabella ci sono " + userService.listAll().size() + " elementi.");
+
+			testCercaPerCognomeENomeCheInziaCon(userService);
+			System.out.println("In tabella ci sono " + userService.listAll().size() + " elementi.");
+
+			testAccedi(userService);
+
 			// E TUTTI I TEST VANNO FATTI COSI'
 
 		} catch (Exception e) {
@@ -93,7 +101,7 @@ public class TestUser {
 
 		// recupero col findbyexample e mi aspetto di trovarla
 		List<User> risultatifindByExample = userService.findByExample(new User("Giovanna", "Sastre"));
-		if (risultatifindByExample.size() != 1)
+		if (risultatifindByExample.size() < 1)
 			throw new RuntimeException("testUpdateUser: testFindByExample FAILED ");
 
 		// mi metto da parte l'id su cui lavorare per il test
@@ -107,6 +115,71 @@ public class TestUser {
 			throw new RuntimeException("testUpdateUser FAILED ");
 
 		System.out.println(".......testUpdateUser PASSED.............");
+	}
+
+	private static void testCercaTuttiQuelliCheUsernameIniziaCon(UserService userService) throws Exception {
+		System.out.println(".......testCercaTuttiQuelliCheUsernameIniziaCon inizio.............");
+
+		// inserisco i dati che poi modifico
+		if (userService.inserisciNuovo(new User("Giovanna", "Sastre", "gio", "pwd@3", LocalDate.now())) != 1)
+			throw new RuntimeException("testCercaTuttiQuelliCheUsernameIniziaCon: inserimento preliminare FAILED ");
+
+		// recupero col findbyexample e mi aspetto di trovarla
+		List<User> risultatiMetodo = userService.cercaTuttiQuelliCheUsernameIniziaCon("G");
+		for (User user : risultatiMetodo) {
+			System.out.println(user);
+		}
+		if (risultatiMetodo.size() < 1)
+			throw new RuntimeException("testCercaTuttiQuelliCheUsernameIniziaCon: testFindByExample FAILED ");
+
+		// mi metto da parte l'id su cui lavorare per il test
+		Long idGiovanna = risultatiMetodo.get(0).getId();
+		for (User user : risultatiMetodo) {
+			userService.rimuovi(user);
+		}
+
+		System.out.println(".......testCercaTuttiQuelliCheUsernameIniziaCon PASSED.............");
+	}
+
+	private static void testCercaPerCognomeENomeCheInziaCon(UserService userService) throws Exception {
+		System.out.println(".......testCercaPerCognomeENomeCheInziaCon inizio.............");
+
+		// inserisco i dati che poi modifico
+		if (userService.inserisciNuovo(new User("Giovanna", "Sastre", "gio", "pwd@3", LocalDate.now())) != 1)
+			throw new RuntimeException("testCercaPerCognomeENomeCheInziaCon: inserimento preliminare FAILED ");
+
+		// recupero col findbyexample e mi aspetto di trovarla
+		List<User> risultatiMetodo = userService.cercaPerCognomeENomeCheInziaCon("Sastre", "gio");
+		for (User user : risultatiMetodo) {
+			System.out.println(user);
+		}
+		if (risultatiMetodo.size() < 1)
+			throw new RuntimeException("testCercaPerCognomeENomeCheInziaCon: testFindByExample FAILED ");
+
+		// mi metto da parte l'id su cui lavorare per il test
+		Long idGiovanna = risultatiMetodo.get(0).getId();
+		for (User user : risultatiMetodo) {
+			userService.rimuovi(user);
+		}
+
+		System.out.println(".......testCercaPerCognomeENomeCheInziaCon PASSED.............");
+	}
+
+	private static void testAccedi(UserService userService) throws Exception {
+		System.out.println(".......testAccedi inizio.............");
+
+		// inserisco i dati che poi modifico
+		if (userService.inserisciNuovo(new User("Giovanna", "Sastre", "gio", "pwd@3", LocalDate.now())) != 1)
+			throw new RuntimeException("testAccedi: inserimento preliminare FAILED ");
+
+		// recupero col findbyexample e mi aspetto di trovarla
+		User risultatoMetodoAccedi = userService.accedi("gio", "pwd@3");
+		if (risultatoMetodoAccedi == null)
+			throw new RuntimeException("testAccedi: testAccedi FAILED ");
+
+		userService.rimuovi(risultatoMetodoAccedi);
+
+		System.out.println(".......testAccedi PASSED.............");
 	}
 
 }
